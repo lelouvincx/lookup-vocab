@@ -3,18 +3,17 @@ set -euo pipefail
 case "${1:-}" in setup|resume|sync) ;; *) echo 'Usage: .agents/project setup|resume|sync' >&2; exit 2 ;; esac
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# Common: apply project-owned runtime customizations after every baseline sync.
-# Keep changes idempotent and preserve unrelated files. Baseline overrides are
-# restored by the next projection when removed here. Explicitly remove obsolete
-# files that only this project created. There is no automatic overlay cleanup.
-# This template has no runtime customizations.
+# No project-specific runtime overrides. The shared baseline owns agent tooling.
 
 case "$1" in
 	setup)
-		# Add application installation and first-run preparation here.
+		node -e 'if (Number(process.versions.node.split(".")[0]) < 24) { console.error("Lookup requires Node.js 24 or newer"); process.exit(1); }'
+		npm ci
+		# Local-only and idempotent: never migrate the hosted database from setup.
+		npm run db:init
 		;;
 	resume)
-		# Add application resume work here.
+		# Dependencies and local database state persist; no wake-time installation.
 		;;
 	sync)
 		# Runtime only: no app installation, migrations, seeds or services.

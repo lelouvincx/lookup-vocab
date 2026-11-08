@@ -1,7 +1,14 @@
-/.amp/in/
+node_modules/
+.cloudflare/
+.wrangler/
+dist/
+.dev.vars*
+*.env
+*.sqlite*
+.amp/in/
+.amp/portals/
 .env
 .env.*
-*.env
 *.env.*
 credentials*
 .credentials*
@@ -9,3 +16,5 @@ credentials*
 *.pem
 *.key
 .DS_Store
+
+!.dev.vars.example

@@ -1,4 +1,4 @@
-name: Shell lifecycle
+name: Checks
 on: [push, pull_request]
 permissions:
   contents: read
@@ -11,3 +11,20 @@ jobs:
         run: for file in .agents/* .agents/tests/*.sh; do test -f "$file" || continue; bash -n "$file"; done
       - run: bash .agents/tests/lifecycle.sh
       - run: bash .agents/tests/configure-amp.sh
+  application:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: bash .agents/project setup
+      - run: npm run typecheck
+      - run: npm test
+      - run: node --test extension/*.test.cjs
+      - name: Check browser JavaScript syntax
+        run: for file in public/*.js extension/*.js; do node --check "$file"; done
+      - run: npm run design:lint
+      - run: npm run design:check
+      - run: npm run build

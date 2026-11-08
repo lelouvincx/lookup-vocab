@@ -1,0 +1,45 @@
+/* Generated from DESIGN.md by npm run design:tokens. Do not edit. */
+:root {
+  --color-primary: #58cc02;
+  --color-on-primary: #234600;
+  --color-primary-edge: #46a302;
+  --color-secondary: #1cb0f6;
+  --color-on-secondary: #073b56;
+  --color-secondary-edge: #1489c1;
+  --color-secondary-soft: #e5f6ff;
+  --color-background: #ffffff;
+  --color-surface: #f7f7f7;
+  --color-text: #3c3c3c;
+  --color-muted: #616161;
+  --color-border: #e5e5e5;
+  --color-success-surface: #effbdd;
+  --color-error-surface: #fff0ef;
+  --color-error: #a12525;
+  --color-focus: #0969a2;
+  --color-disabled: #edeff0;
+  --color-disabled-edge: #c6cbce;
+  --spacing-small: 8px;
+  --spacing-medium: 16px;
+  --spacing-large: 24px;
+  --spacing-section: 32px;
+  --rounded-control: 16px;
+  --rounded-card: 24px;
+  --rounded-badge: 12px;
+}
+
+:root {
+  --font-family-heading: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-size-heading: 32px;
+  --font-weight-heading: 800;
+  --letter-spacing-heading: -0.02em;
+  --font-family-expression: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-size-expression: 40px;
+  --font-weight-expression: 800;
+  --letter-spacing-expression: -0.02em;
+  --font-family-body: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-size-body: 16px;
+  --font-weight-body: 500;
+  --font-family-label: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-size-label: 15px;
+  --font-weight-label: 800;
+}

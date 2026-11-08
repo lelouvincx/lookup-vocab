@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Lookup" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Lookup — your vocabulary</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <svg
+      class="icon-defs"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <symbol id="book" viewBox="0 0 24 24">
+        <path d="M3 4c4-1 7 0 9 2 2-2 5-3 9-2v15c-4-1-7 0-9 2-2-2-5-3-9-2Z" />
+        <path d="M12 6v15M6 8l3 1M15 9l3-1" />
+      </symbol>
+      <symbol id="cards-icon" viewBox="0 0 24 24">
+        <path d="m5 4 13-1 1 3M3 8l16-1 1 14-16 1Z" />
+        <path d="m8 12 6-.5M8 16l4-.3" />
+      </symbol>
+      <symbol id="add-icon" viewBox="0 0 24 24">
+        <rect x="4" y="3" width="16" height="18" rx="3" />
+        <path d="M8 12h8M12 8v8" />
+      </symbol>
+      <symbol id="settings-icon" viewBox="0 0 24 24">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+        <circle cx="9" cy="6" r="2" />
+        <circle cx="16" cy="12" r="2" />
+        <circle cx="8" cy="18" r="2" />
+      </symbol>
+      <symbol id="check-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m7 12 3 3 7-7" />
+      </symbol>
+      <symbol id="clock-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 6v6l4 2" />
+      </symbol>
+    </svg>
+    <header>
+      <a href="/" class="brand" aria-label="Lookup home"
+        ><svg class="icon" aria-hidden="true"><use href="#book" /></svg
+        >lookup<span>en → vi</span></a
+      ><span id="mode">Public access · Anyone can edit</span>
+    </header>
+    <main>
+      <nav aria-label="Main navigation">
+        <button data-view="review" aria-current="page">
+          <svg class="icon" aria-hidden="true"><use href="#book" /></svg>Review
+        </button>
+        <button data-view="library">
+          <svg class="icon" aria-hidden="true"><use href="#cards-icon" /></svg
+          >Library
+        </button>
+        <button data-view="add">
+          <svg class="icon" aria-hidden="true"><use href="#add-icon" /></svg>Add
+          a card
+        </button>
+        <button data-view="settings">
+          <svg class="icon" aria-hidden="true">
+            <use href="#settings-icon" /></svg
+          >Settings
+        </button>
+      </nav>
+      <div id="notice" role="status" aria-live="polite"></div>
+      <div id="error" role="alert" hidden></div>
+      <section id="review" class="view">
+        <div class="section-heading">
+          <div>
+            <h1>A little, every day.</h1>
+            <p>Recall the meaning, then turn the card.</p>
+          </div>
+          <button id="refresh" class="quiet">Refresh</button>
+        </div>
+        <div class="summary" id="summary">Loading your vocabulary…</div>
+        <article id="flashcard" aria-live="polite" aria-busy="true">
+          <p>Getting your next card…</p>
+        </article>
+        <p class="footnote">
+          Due cards come first. New cards follow your daily limit.
+        </p>
+      </section>
+      <section id="library" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <h1>Your collection</h1>
+            <p>Every lookup has a place here.</p>
+          </div>
+        </div>
+        <div class="filters">
+          <label
+            >Search vocabulary<input
+              id="search"
+              type="search"
+              placeholder="Find a word or meaning" /></label
+          ><label
+            >Card status<select id="status">
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+              <option value="deleted">Removed</option>
+              <option value="all">All cards</option>
+            </select></label
+          >
+        </div>
+        <p class="hint">
+          Removing a card keeps its text and history. It is not privacy erasure.
+        </p>
+        <div id="cards"></div>
+      </section>
+      <section id="add" class="view" hidden>
+        <h1>Keep a new expression</h1>
+        <p>
+          Reading on your phone? Add the English and its Vietnamese meaning.
+        </p>
+        <form id="add-form">
+          <label
+            >English<textarea
+              name="sourceText"
+              required
+              maxlength="500"
+              rows="3"
+              placeholder="A word, phrase, or short sentence"
+            ></textarea>
+          </label>
+          <p class="hint">
+            Up to 500 characters and 80 words. Long passages are not saved.
+          </p>
+          <label
+            >Vietnamese<textarea
+              name="translatedText"
+              required
+              maxlength="2000"
+              rows="3"
+              placeholder="The meaning you want to remember"
+            ></textarea>
+          </label>
+          <button class="primary">Save card</button>
+        </form>
+      </section>
+      <section id="settings" class="view" hidden>
+        <h1>Make it your routine</h1>
+        <p>A small daily habit, on your terms.</p>
+        <section class="setting">
+          <h2>Daily pace</h2>
+          <form id="limit-form">
+            <label
+              >New cards per day<input
+                name="dailyLimit"
+                id="limit"
+                type="number"
+                required
+                min="0"
+                max="100" /></label
+            ><button>Save limit</button>
+          </form>
+          <p class="hint">
+            Default: 10. Resets at midnight in Asia/Ho_Chi_Minh. Due reviews are
+            never capped.
+          </p>
+        </section>
+        <section class="setting">
+          <h2>Pair your desktop extension</h2>
+          <p>
+            The extension uses a token to save lookups. App data, settings and
+            token controls are public and need no login.
+          </p>
+          <button id="pair">Create pairing token</button>
+          <div id="pair-result" hidden>
+            <label
+              >Copy this token into the extension<input
+                id="paired-token"
+                readonly
+                autocomplete="off"
+            /></label>
+            <p class="hint">
+              Shown only here. Treat it like a password; revoke it below if
+              lost.
+            </p>
+            <button id="hide-token">Hide token</button>
+          </div>
+          <div id="tokens"></div>
+        </section>
+        <section class="setting">
+          <h2>Keep a backup</h2>
+          <p>
+            Download cards, review history and capture receipts. Tokens are
+            never included.
+          </p>
+          <button id="backup">Download backup</button
+          ><label class="restore"
+            >Restore from a backup<input
+              type="file"
+              id="restore"
+              accept="application/json,.json"
+          /></label>
+          <p class="hint">
+            Portable backups support up to 1 MB; larger collections need a D1
+            SQL export. Restore replaces vocabulary and review history. Pairing
+            tokens and already-applied settings/card mutation receipts stay
+            unchanged. Keep backups private.
+          </p>
+        </section>
+      </section>
+    </main>
+    <footer>Made from the words you actually meet.</footer>
+  </body>
+</html>

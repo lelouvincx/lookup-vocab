@@ -1,0 +1,25 @@
+{
+  "name": "lookup-vocab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --ip 127.0.0.1 --port 5173 --var LOCAL_DEV:true",
+    "build": "npm run design:tokens && wrangler deploy --dry-run --outdir dist",
+    "design:lint": "designmd lint DESIGN.md",
+    "design:tokens": "node scripts/design-tokens.mjs",
+    "design:check": "node scripts/design-tokens.mjs --check",
+    "db:init": "wrangler d1 migrations apply DB --local",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "@google/design.md": "^0.4.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.75.0"
+  }
+}

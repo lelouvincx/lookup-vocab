@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Vocabulary capture",
+  "version": "0.1.0",
+  "description": "Save settled English to Vietnamese Google Translate lookups to your vocabulary app.",
+  "permissions": ["storage", "alarms"],
+  "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_popup": "settings.html"},
+  "options_page": "settings.html",
+  "content_scripts": [{"matches": ["https://translate.google.com/*"], "js": ["capture.js", "content.js"], "run_at": "document_idle"}]
+}

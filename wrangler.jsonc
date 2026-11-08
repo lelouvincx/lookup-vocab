@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lookup-vocab",
+  "account_id": "3dae581425f7a04837a71679b2a0117c",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "vocab.lelouvincx.com", "custom_domain": true }],
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-17",
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lookup-vocab",
+      "database_id": "d9de4ef6-d7ee-4624-8d54-ed9122033557",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "vars": {
+    "APP_ORIGIN": "https://vocab.lelouvincx.com",
+  },
+}

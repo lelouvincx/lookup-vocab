@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Explicit opt-in only. This command changes this repository's personal Amp map.
+set -euo pipefail
+[ "$#" -eq 0 ] || { echo 'Usage: .agents/configure-amp' >&2; exit 2; }
+die() { echo "[configure-amp] $*" >&2; exit 1; }
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+root="$(pwd -P)"
+[ "$(git rev-parse --show-toplevel)" = "$root" ] || die 'Run from a checkout root.'
+origin="$(git remote get-url origin)"
+case "$origin" in
+	https://github.com/lelouvincx/*) repo="${origin#https://github.com/lelouvincx/}" ;;
+	git@github.com:lelouvincx/*) repo="${origin#git@github.com:lelouvincx/}" ;;
+	*) die 'Origin must use standard GitHub HTTPS or SSH and belong to lelouvincx.' ;;
+esac
+repo="${repo%.git}"
+[[ "$repo" =~ ^[A-Za-z0-9_.-]+$ ]] && [ "$repo" != . ] && [ "$repo" != .. ] || die 'Invalid repository name.'
+url="https://github.com/lelouvincx/$repo"
+ssh="git@github.com:lelouvincx/$repo.git"
+command -v jq >/dev/null || die 'Install jq before configuring Amp.'
+command -v amp >/dev/null || die 'Install and authenticate the supported Amp CLI first.'
+source "$root/.agents/bootstrap-agent-skills"
+pre="$AGENT_SKILLS_DIR/.agents/pre-setup"
+ship="$AGENT_SKILLS_DIR/skills/shipping-personal-projects/ship.txt"
+[ -s "$pre" ] && [ -s "$ship" ] || die 'Selected source lacks the canonical pre-setup or Ship prompt.'
+
+# Match repository identity, never a display name. Inspect ownership on get.
+projects="$(amp projects list --json)"
+matches="$(jq --arg url "$url" '
+  def canonical: sub("^git@github.com:"; "https://github.com/") | sub("\\.git$"; "");
+  [.[] | select(.namespace == "lelouvincx" and ((.repositoryURL | canonical) == $url))]
+' <<<"$projects")"
+count="$(jq length <<<"$matches")"
+[ "$count" -le 1 ] || die 'Multiple personal maps match this repository; resolve them manually.'
+recorded="$(git config --local --get agentInfrastructure.ampProjectID || true)"
+if [ "$count" -eq 0 ]; then
+	[ -z "$recorded" ] || die 'Recorded map is absent from the list; refusing to create a duplicate.'
+	created="$(amp projects create "lelouvincx/$repo" --personal --json)"
+	id="$(jq -er '.id | select(type == "string" and length > 0)' <<<"$created")"
+	# Persist immediately, before any later get/update can fail.
+	git config --local agentInfrastructure.ampProjectID "$id"
+else
+	id="$(jq -er '.[0].id' <<<"$matches")"
+	[ -z "$recorded" ] || [ "$recorded" = "$id" ] || die 'Recorded ID differs from the matching map.'
+fi
+state="$(amp projects get "$id" --json)"
+assert_identity() {
+	jq -e --arg id "$id" --arg url "$url" '
+    def canonical: sub("^git@github.com:"; "https://github.com/") | sub("\\.git$"; "");
+    .id == $id and .namespace == "lelouvincx" and .owner.type == "user" and
+    ((.repositoryURL | canonical) == $url)
+  ' <<<"$state" >/dev/null || die 'Readback identity or personal ownership does not match; no update allowed.'
+}
+assert_identity
+if [ -z "$recorded" ] && [ "$count" -eq 1 ]; then
+	git config --local agentInfrastructure.ampProjectID "$id"
+fi
+desired="$(jq -n --arg id "$id" --arg url "$url" --arg ssh "$ssh" --rawfile pre "$pre" --rawfile ship "$ship" '
+  {id:$id, repositoryURL:$url, repositoryMode:"github", orbCommitAuthor:"thread-creator",
+   baseBranch:"", remoteURLs:([$url,$ssh]|sort), preSetupScript:$pre, preCloneScript:"",
+   desktopResumeScript:"", listedOnAmpStore:false, description:"", galleryMedia:[],
+   shipBehavior:"custom", customShipPrompt:$ship, additionalRepositories:[]}
+')"
+# CLI get currently omits Ship and additional repositories. A successful apply
+# receipt prevents repeated writes; it is not proof of those fields' remote state.
+fingerprint="$(printf '%s' "$desired" | git hash-object --stdin)"
+receipt="$(git config --local --get agentInfrastructure.ampReceipt || true)"
+exposed_matches() {
+	jq -e --argjson want "$desired" '
+    def canonical: sub("^git@github.com:"; "https://github.com/") | sub("\\.git$"; "");
+    . as $got | $want | del(.shipBehavior,.customShipPrompt,.additionalRepositories) |
+    to_entries | all(.[]; . as $entry |
+      if .key == "remoteURLs" then
+        ($got.remoteURLs|map(canonical)|unique|sort) == (.value|map(canonical)|unique|sort)
+      elif .key == "preSetupScript" then ($got[.key]|rtrimstr("\n")) == (.value|rtrimstr("\n"))
+      else $got[.key] == .value end)
+  ' <<<"$state" >/dev/null
+}
+gallery="$(amp projects gallery-media get "$id")"
+gallery_empty() { jq -e '. == []' <<<"$gallery" >/dev/null; }
+if exposed_matches && gallery_empty && [ "$receipt" = "$fingerprint" ]; then
+	echo "[configure-amp] $id already matches exposed fields and the last apply receipt; no writes."
+	echo '[configure-amp] Ship and additional repositories are not exposed by get; their remote state is unverified.'
+	exit 0
+fi
+empty="$(mktemp)"
+trap 'rm -f "$empty"' EXIT
+amp projects update "$id" --repository-url "$url" --repository-mode github \
+	--remote-url "$ssh" --clear-base-branch --clear-additional-repositories \
+	--ship-behavior custom --custom-ship-prompt-file "$ship" --commit-author thread-creator \
+	--pre-setup-script-file "$pre" --pre-clone-script-file "$empty" \
+	--desktop-resume-script-file "$empty" --no-listed-on-amp-store --description '' --json >/dev/null
+if ! gallery_empty; then
+	amp projects gallery-media set "$id" '[]' >/dev/null
+fi
+state="$(amp projects get "$id" --json)"
+assert_identity
+gallery="$(amp projects gallery-media get "$id")"
+exposed_matches && gallery_empty || die 'Managed exposed fields failed readback; no receipt recorded.'
+git config --local agentInfrastructure.ampReceipt "$fingerprint"
+echo "[configure-amp] Configured $id for $url; exposed fields verified."
+echo '[configure-amp] Ship and additional repositories were submitted, but get does not expose them. Verify them in Amp.'
+echo '[configure-amp] Bot grants and publishing policy remain owner-controlled. No GitHub grants were changed.'

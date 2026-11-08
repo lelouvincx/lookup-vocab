@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/bootstrap-agent-skills"
+bash "$AGENT_SKILLS_DIR/.agents/resume" "$@"
+bash "$consumer_root/.agents/project" resume

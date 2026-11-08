@@ -1,0 +1,11 @@
+/.amp/in/
+.env
+.env.*
+*.env
+*.env.*
+credentials*
+.credentials*
+*.credentials*
+*.pem
+*.key
+.DS_Store

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Source this file to select source without installing or refreshing anything.
+set -euo pipefail
+
+consumer_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+if [ -n "${AGENT_SKILLS_DIR:-}" ]; then
+	:
+elif [ -e /home/user/workspace/repos/agent-skills ] || [ -L /home/user/workspace/repos/agent-skills ]; then
+	AGENT_SKILLS_DIR=/home/user/workspace/repos/agent-skills
+elif [ -e "$(dirname "$consumer_root")/agent-skills" ] || [ -L "$(dirname "$consumer_root")/agent-skills" ]; then
+	AGENT_SKILLS_DIR="$(dirname "$consumer_root")/agent-skills"
+else
+	AGENT_SKILLS_DIR=/home/user/workspace/agent-skills
+fi
+export AGENT_SKILLS_DIR
+export AGENT_SKILLS_REPO="${AGENT_SKILLS_REPO:-https://github.com/lelouvincx/agent-skills.git}"
+
+fail_source() { printf '[agent-skills] %s: %s\n' "$1" "$AGENT_SKILLS_DIR" >&2; exit 1; }
+# Reject symlinks in every existing component, including a missing path's parents.
+candidate="$AGENT_SKILLS_DIR"
+while [ "$candidate" != / ] && [[ "$candidate" = */ ]]; do candidate="${candidate%/}"; done
+while [ "$candidate" != / ] && [ "$candidate" != . ]; do
+	[ ! -L "$candidate" ] || fail_source 'refusing symlink source'
+	candidate="$(dirname "$candidate")"
+done
+if [ ! -e "$AGENT_SKILLS_DIR" ]; then
+	git clone "$AGENT_SKILLS_REPO" "$AGENT_SKILLS_DIR"
+fi
+source_root="$(git -C "$AGENT_SKILLS_DIR" rev-parse --show-toplevel)" || fail_source 'not a Git checkout'
+AGENT_SKILLS_DIR="$(cd "$AGENT_SKILLS_DIR" && pwd -P)"
+[ "$AGENT_SKILLS_DIR" = "$(cd "$source_root" && pwd -P)" ] || fail_source 'not a checkout root'
+for required in .agents/setup .agents/resume sync-skills.sh; do
+	[ -f "$AGENT_SKILLS_DIR/$required" ] || fail_source "missing $required"
+done
+export AGENT_SKILLS_DIR

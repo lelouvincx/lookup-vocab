@@ -1,0 +1,13 @@
+name: Shell lifecycle
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  lifecycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: for file in .agents/* .agents/tests/*.sh; do test -f "$file" || continue; bash -n "$file"; done
+      - run: bash .agents/tests/lifecycle.sh
+      - run: bash .agents/tests/configure-amp.sh

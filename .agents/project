@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in setup|resume|sync) ;; *) echo 'Usage: .agents/project setup|resume|sync' >&2; exit 2 ;; esac
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# Common: apply project-owned runtime customizations after every baseline sync.
+# Keep changes idempotent and preserve unrelated files. Baseline overrides are
+# restored by the next projection when removed here. Explicitly remove obsolete
+# files that only this project created. There is no automatic overlay cleanup.
+# This template has no runtime customizations.
+
+case "$1" in
+	setup)
+		# Add application installation and first-run preparation here.
+		;;
+	resume)
+		# Add application resume work here.
+		;;
+	sync)
+		# Runtime only: no app installation, migrations, seeds or services.
+		;;
+esac
